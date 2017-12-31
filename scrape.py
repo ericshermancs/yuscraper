@@ -53,6 +53,9 @@ def getjson(key):
 		f.write(key+'\n')
 		completedlist.append(key)
 def main():
+	if not os.path.isfile('completedlist.txt'):
+		with open('completedlist.txt','w+') as f:
+			pass
 	with open('completedlist.txt','r+') as f:
 		for line in f:
 			completedlist.append(line.strip())
