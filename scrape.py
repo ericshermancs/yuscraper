@@ -7,9 +7,13 @@ import traceback
 
 import argparse
 completedlist = []
-
+pending_completed = []
 
 def getjson(key):
+	global completedlist
+	global pending_completed
+	if key in completedlist:
+		return
 	r = requests.get('http://www.yutorah.org/sidebar/getLectureDataJSON.cfm?shiurID={}'.format(key))
 	j = r.json()
 	
@@ -17,19 +21,23 @@ def getjson(key):
 		print(key,'is empty. End of list?')
 		with open('completedlist.txt','a+') as f:
 			f.write(key+'\n')
-			completedlist.append(key)
+			pending_completed.append(key)
 		return
 	if j['mediaTypeCategory'] != 'audio':
 		print(key,'is not audio')
 		with open('completedlist.txt','a+') as f:
 			f.write(key+'\n')
 			completedlist.append(key)
+			completedlist += pending_completed
+			pending_completed = []
 		return
 	if j['shiurIsFileMissingOnServer'] != 0:
 		print(key,'is missing on server')
 		with open('completedlist.txt','a+') as f:
 			f.write(key+'\n')
 			completedlist.append(key)
+			completedlist += pending_completed
+			pending_completed = []
 		return
 
 	dlurl = dlurl = j['downloadURL']
@@ -84,8 +92,8 @@ def main():
 	
 	for i in range(start,end):
 		key = str(i).zfill(6)
-		if not key in completedlist:	
-			executor.submit(getjson,key)
+			
+		executor.submit(getjson,key)
 	
 
 	executor.shutdown(wait=True)
